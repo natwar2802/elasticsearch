@@ -74,6 +74,7 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
     @Inject
     public NodeConnectionsService(Settings settings, ThreadPool threadPool, TransportService transportService) {
         super(settings);
+        logger.error("line 77 NodeConnectionService");
         this.threadPool = threadPool;
         this.transportService = transportService;
         this.reconnectInterval = NodeConnectionsService.CLUSTER_NODE_RECONNECT_INTERVAL_SETTING.get(settings);
@@ -81,6 +82,7 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
 
     public void connectToNodes(DiscoveryNodes discoveryNodes) {
         CountDownLatch latch = new CountDownLatch(discoveryNodes.getSize());
+        logger.error("line 85 NodeConnectionService");
         for (final DiscoveryNode node : discoveryNodes) {
             final boolean connected;
             try (Releasable ignored = nodeLocks.acquire(node)) {
@@ -88,12 +90,14 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
                 connected = transportService.nodeConnected(node);
             }
             if (connected) {
+                logger.error("line 93");
                 latch.countDown();
             } else {
                 // spawn to another thread to do in parallel
                 threadPool.executor(ThreadPool.Names.MANAGEMENT).execute(new AbstractRunnable() {
                     @Override
                     public void onFailure(Exception e) {
+                        logger.error("line 99 NodeConnectionService");
                         // both errors and rejections are logged here. the service
                         // will try again after `cluster.nodes.reconnect_interval` on all nodes but the current master.
                         // On the master, node fault detection will remove these nodes from the cluster as their are not
@@ -126,6 +130,7 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
      * Disconnects from all nodes except the ones provided as parameter
      */
     public void disconnectFromNodesExcept(DiscoveryNodes nodesToKeep) {
+        logger.error("line 132 NodeConnectionService");
         Set<DiscoveryNode> currentNodes = new HashSet<>(nodes.keySet());
         for (DiscoveryNode node : nodesToKeep) {
             currentNodes.remove(node);
@@ -144,6 +149,7 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
     }
 
     void validateAndConnectIfNeeded(DiscoveryNode node) {
+        //logger.error("line 151 NodeConnectionService");
         assert nodeLocks.isHeldByCurrentThread(node) : "validateAndConnectIfNeeded must be called under lock";
         if (lifecycle.stoppedOrClosed() ||
                 nodes.containsKey(node) == false) { // we double check existence of node since connectToNode might take time...
@@ -178,7 +184,10 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
         }
 
         protected void doRun() {
+            //logger.error("line 186 NodeConnectionService");
+
             for (DiscoveryNode node : nodes.keySet()) {
+
                 try (Releasable ignored = nodeLocks.acquire(node)) {
                     validateAndConnectIfNeeded(node);
                 }
@@ -187,6 +196,7 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
 
         @Override
         public void onAfter() {
+            //logger.error("line 198 NodeConnectionService");
             if (lifecycle.started()) {
                 backgroundFuture = threadPool.schedule(reconnectInterval, ThreadPool.Names.GENERIC, this);
             }
@@ -195,6 +205,7 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
 
     @Override
     protected void doStart() {
+        logger.error("line 207 NodeConnectionService");
         backgroundFuture = threadPool.schedule(reconnectInterval, ThreadPool.Names.GENERIC, new ConnectionChecker());
     }
 

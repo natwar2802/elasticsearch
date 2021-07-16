@@ -239,7 +239,9 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
 
     @Override
     public void transportServiceAdapter(TransportServiceAdapter service) {
+        logger.error("line 242 TcpTransport");
         if (service.getRequestHandler(HANDSHAKE_ACTION_NAME) != null) {
+
             throw new IllegalStateException(HANDSHAKE_ACTION_NAME + " is a reserved request handler and must not be registered");
         }
         this.transportServiceAdapter = service;
@@ -456,7 +458,9 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
     public void connectToNode(DiscoveryNode node, ConnectionProfile connectionProfile,
                               CheckedBiConsumer<Connection, ConnectionProfile, IOException> connectionValidator)
         throws ConnectTransportException {
+        logger.error("461 tcp transport");
         connectionProfile = resolveConnectionProfile(connectionProfile, defaultConnectionProfile);
+
         if (node == null) {
             throw new ConnectTransportException(null, "can't connect to a null node");
         }
@@ -1142,6 +1146,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
      */
     public void sendErrorResponse(Version nodeVersion, Channel channel, final Exception error, final long requestId,
                                   final String action) throws IOException {
+        logger.error("line 1147 TcpTransport");
         try (BytesStreamOutput stream = new BytesStreamOutput()) {
             stream.setVersion(nodeVersion);
             RemoteTransportException tx = new RemoteTransportException(
@@ -1165,6 +1170,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
      */
     public void sendResponse(Version nodeVersion, Channel channel, final TransportResponse response, final long requestId,
                              final String action, TransportResponseOptions options) throws IOException {
+        logger.error("line 1172 TcpTransport");
         sendResponse(nodeVersion, channel, response, requestId, action, options, (byte)0);
     }
 
@@ -1173,6 +1179,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
         if (compress) {
             options = TransportResponseOptions.builder(options).withCompress(true).build();
         }
+        logger.error("Request received 1176 line Transport");
         status = TransportStatus.setResponse(status); // TODO share some code with sendRequest
         ReleasableBytesStreamOutput bStream = new ReleasableBytesStreamOutput(bigArrays);
         // we wrap this in a release once since if the onRequestSent callback throws an exception
@@ -1194,6 +1201,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
                 try {
                     toRelease.close();
                 } finally {
+                    logger.error("Request received 1198 line Transport");
                     transportServiceAdapter.onResponseSent(requestId, action, response, finalOptions);
                 }
             };
@@ -1351,19 +1359,25 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
     }
 
     protected abstract boolean isOpen(Channel channel);
-
+    int countmsgreceived=0;
     /**
      * This method handles the message receive part for both request and responses
      */
     public final void messageReceived(BytesReference reference, Channel channel, String profileName,
                                       InetSocketAddress remoteAddress, int messageLengthBytes) throws IOException {
+        logger.error("line 1366 TcpTransport");
         final int totalMessageSize = messageLengthBytes + TcpHeader.MARKER_BYTES_SIZE + TcpHeader.MESSAGE_LENGTH_SIZE;
         transportServiceAdapter.addBytesReceived(totalMessageSize);
         // we have additional bytes to read, outside of the header
         boolean hasMessageBytesToRead = (totalMessageSize - TcpHeader.HEADER_SIZE) > 0;
+
         StreamInput streamIn = reference.streamInput();
+        countmsgreceived=countmsgreceived+1;
+        String k1=reference.utf8ToString();
+        logger.error("message"+countmsgreceived+" received by 5 is:"+k1);
         boolean success = false;
         try (ThreadContext.StoredContext tCtx = threadPool.getThreadContext().stashContext()) {
+            //System.out.println(TcpHeader.HEADER_SIZE);
             long requestId = streamIn.readLong();
             byte status = streamIn.readByte();
             Version version = Version.fromId(streamIn.readInt());
@@ -1385,13 +1399,19 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
                 }
                 streamIn = compressor.streamInput(streamIn);
             }
-            if (version.onOrAfter(Version.CURRENT.minimumCompatibilityVersion()) == false || version.major != Version.CURRENT.major) {
+
+            /*if (version.onOrAfter(Version.CURRENT.minimumCompatibilityVersion()) == false || version.major != Version.CURRENT.major) {
                 throw new IllegalStateException("Received message from unsupported version: [" + version
                     + "] minimal compatible version is: [" +Version.CURRENT.minimumCompatibilityVersion() + "]");
-            }
+            }*/
+//            String PrintMessage = streamIn.readString();
+//            System.out.println("messageAt6.8 "+countmsgreceived+" Received "+PrintMessage);
             streamIn = new NamedWriteableAwareStreamInput(streamIn, namedWriteableRegistry);
             streamIn.setVersion(version);
             threadPool.getThreadContext().readHeaders(streamIn);
+            //String messageChk=reference.utf8ToString();
+            //System.out.println(messageChk);
+            //System.out.println(reference);
             if (TransportStatus.isRequest(status)) {
                 handleRequest(channel, profileName, streamIn, requestId, messageLengthBytes, version, remoteAddress, status);
             } else {
@@ -1484,6 +1504,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
 
     protected String handleRequest(Channel channel, String profileName, final StreamInput stream, long requestId, int messageLengthBytes,
                                    Version version, InetSocketAddress remoteAddress, byte status) throws IOException {
+        logger.error("line 1494 TcpTransport");
         final String action = stream.readString();
         transportServiceAdapter.onRequestReceived(requestId, action);
         TransportChannel transportChannel = null;
@@ -1565,6 +1586,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
             if (lifecycleState() == Lifecycle.State.STARTED) {
                 // we can only send a response transport is started....
                 try {
+                    logger.error("line 1576 TcpTransport");
                     transportChannel.sendResponse(e);
                 } catch (Exception inner) {
                     inner.addSuppressed(e);
@@ -1600,6 +1622,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
     }
 
     protected Version executeHandshake(DiscoveryNode node, Channel channel, TimeValue timeout) throws IOException, InterruptedException {
+        logger.error("line 1612 TcpTransport");
         numHandshakes.inc();
         final long requestId = newRequestId();
         final HandshakeResponseHandler handler = new HandshakeResponseHandler(channel);
@@ -1636,6 +1659,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
             } else {
                 Version version = versionRef.get();
                 if (getCurrentVersion().isCompatible(version) == false) {
+                    logger.error("line 1649 TcpTransport");
                     throw new IllegalStateException("Received message from unsupported version: [" + version
                         + "] minimal compatible version is: [" + getCurrentVersion().minimumCompatibilityVersion() + "]");
                 }
@@ -1666,6 +1690,7 @@ public abstract class TcpTransport<Channel> extends AbstractLifecycleComponent i
      * Called once the channel is closed for instance due to a disconnect or a closed socket etc.
      */
     private void onChannelClosed(Channel channel) {
+        logger.error("line 1680 TcpTransport");
         final Optional<Long> first = pendingHandshakes.entrySet().stream()
             .filter((entry) -> entry.getValue().channel == channel).map((e) -> e.getKey()).findFirst();
         if(first.isPresent()) {

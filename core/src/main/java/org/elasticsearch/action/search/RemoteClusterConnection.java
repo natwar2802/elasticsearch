@@ -110,7 +110,9 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
      */
     RemoteClusterConnection(Settings settings, String clusterAlias, List<DiscoveryNode> seedNodes,
                             TransportService transportService, int maxNumRemoteConnections, Predicate<DiscoveryNode> nodePredicate) {
+
         super(settings);
+        logger.error("line RemoteClusterConnection");
         this.transportService = transportService;
         this.maxNumRemoteConnections = maxNumRemoteConnections;
         this.nodePredicate = nodePredicate;
@@ -128,6 +130,7 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
             private volatile Iterator<DiscoveryNode> current;
             @Override
             public DiscoveryNode get() {
+                logger.error("line RemoteClusterConnection");
                 if (current == null || current.hasNext() == false) {
                     current = connectedNodes.iterator();
                     if (current.hasNext() == false) {
@@ -146,12 +149,14 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
      * Updates the list of seed nodes for this cluster connection
      */
     synchronized void updateSeedNodes(List<DiscoveryNode> seedNodes, ActionListener<Void> connectListener) {
+        logger.error("line RemoteClusterConnection");
         this.seedNodes = Collections.unmodifiableList(new ArrayList<>(seedNodes));
         connectHandler.connect(connectListener);
     }
 
     @Override
     public void onNodeDisconnected(DiscoveryNode node) {
+        logger.error("line RemoteClusterConnection");
         boolean remove = connectedNodes.remove(node);
         if (remove && connectedNodes.size() < maxNumRemoteConnections) {
             // try to reconnect and fill up the slot of the disconnected node
@@ -164,6 +169,7 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
      */
     public void fetchSearchShards(SearchRequest searchRequest, final String[] indices,
                                   ActionListener<ClusterSearchShardsResponse> listener) {
+        logger.error("line RemoteClusterConnection");
         if (connectedNodes.isEmpty()) {
             // just in case if we are not connected for some reason we try to connect and if we fail we have to notify the listener
             // this will cause some back pressure on the search end and eventually will cause rejections but that's fine
@@ -212,6 +218,7 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
      * given node.
      */
     Transport.Connection getConnection(DiscoveryNode remoteClusterNode) {
+        logger.error("line RemoteClusterConnection");
         DiscoveryNode discoveryNode = nodeSupplier.get();
         Transport.Connection connection = transportService.getConnection(discoveryNode);
         return new Transport.Connection() {
@@ -253,6 +260,7 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
      * we will just reject the connect trigger which will lead to failing searches.
      */
     private class ConnectHandler implements Closeable {
+
         private final Semaphore running = new Semaphore(1);
         private final AtomicBoolean closed = new AtomicBoolean(false);
         private final BlockingQueue<ActionListener<Void>> queue = new ArrayBlockingQueue<>(100);
@@ -283,6 +291,7 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
         }
 
         private void connect(ActionListener<Void> connectListener, boolean forceRun) {
+            logger.error("line RemoteClusterConnection");
             final boolean runConnect;
             final Collection<ActionListener<Void>> toNotify;
             synchronized (queue) {
@@ -360,6 +369,7 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
             if (Thread.currentThread().isInterrupted()) {
                 listener.onFailure(new InterruptedException("remote connect thread got interrupted"));
             }
+            logger.error("line RemoteClusterConnection");
             try {
                 if (seedNodes.hasNext()) {
                     cancellableThreads.executeIO(() -> {
@@ -534,6 +544,7 @@ final class RemoteClusterConnection extends AbstractComponent implements Transpo
      * Fetches connection info for this connection
      */
     public void getConnectionInfo(ActionListener<RemoteConnectionInfo> listener) {
+        logger.error("line RemoteClusterConnection");
         final Optional<DiscoveryNode> anyNode = connectedNodes.stream().findAny();
         if (anyNode.isPresent() == false) {
             // not connected we return immediately

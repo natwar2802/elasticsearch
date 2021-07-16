@@ -56,6 +56,7 @@ public class Gateway extends AbstractComponent implements ClusterStateApplier {
                    TransportNodesListGatewayMetaState listGatewayMetaState, Discovery discovery,
                    IndicesService indicesService) {
         super(settings);
+        logger.error("59 Gateway");
         this.indicesService = indicesService;
         this.clusterService = clusterService;
         this.metaState = metaState;
@@ -65,6 +66,7 @@ public class Gateway extends AbstractComponent implements ClusterStateApplier {
     }
 
     public void performStateRecovery(final GatewayStateRecoveredListener listener) throws GatewayException {
+        logger.error("69 Gateway");
         String[] nodesIds = clusterService.state().nodes().getMasterNodes().keys().toArray(String.class);
         logger.trace("performing state recovery from {}", Arrays.toString(nodesIds));
         TransportNodesListGatewayMetaState.NodesGatewayMetaState nodesState = listGatewayMetaState.list(nodesIds, null).actionGet();
@@ -163,6 +165,7 @@ public class Gateway extends AbstractComponent implements ClusterStateApplier {
     }
 
     private void logUnknownSetting(String settingType, Map.Entry<String, String> e) {
+        logger.error("168 Gateway");
         logger.warn("ignoring unknown {} setting: [{}] with value [{}]; archiving", settingType, e.getKey(), e.getValue());
     }
 
@@ -178,6 +181,7 @@ public class Gateway extends AbstractComponent implements ClusterStateApplier {
 
     @Override
     public void applyClusterState(final ClusterChangedEvent event) {
+        logger.error("184 Gateway");
         // order is important, first metaState, and then shardsState
         // so dangling indices will be recorded
         metaState.applyClusterState(event);

@@ -99,6 +99,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
                           TransportNodesListGatewayMetaState listGatewayMetaState, Discovery discovery,
                           IndicesService indicesService) {
         super(settings);
+        logger.error("102 Gateway Service");
         this.gateway = new Gateway(settings, clusterService, metaState, listGatewayMetaState, discovery,
             indicesService);
         this.allocationService = allocationService;
@@ -133,6 +134,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
     @Override
     protected void doStart() {
         // use post applied so that the state will be visible to the background recovery thread we spawn in performStateRecovery
+        logger.error("137 Gateway Service");
         clusterService.addListener(this);
     }
 
@@ -152,6 +154,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
         }
 
         final ClusterState state = event.state();
+        logger.error("157 Gateway Service");
 
         if (state.nodes().isLocalNodeElectedMaster() == false) {
             // not our job to recover
@@ -202,7 +205,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
     private void performStateRecovery(boolean enforceRecoverAfterTime, String reason) {
         final Gateway.GatewayStateRecoveredListener recoveryListener = new GatewayRecoveryListener();
-
+        logger.error("208 Gateway Service");
         if (enforceRecoverAfterTime && recoverAfterTime != null) {
             if (scheduledRecovery.compareAndSet(false, true)) {
                 logger.info("delaying initial state recovery for [{}]. {}", recoverAfterTime, reason);
@@ -241,6 +244,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
         @Override
         public void onSuccess(final ClusterState recoveredState) {
+            logger.error("247 Gateway Service");
             logger.trace("successful state recovery, importing cluster state...");
             clusterService.submitStateUpdateTask("local-gateway-elected-state", new ClusterStateUpdateTask() {
                 @Override

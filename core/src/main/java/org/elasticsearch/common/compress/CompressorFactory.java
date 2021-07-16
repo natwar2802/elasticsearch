@@ -19,6 +19,7 @@
 
 package org.elasticsearch.common.compress;
 
+import jdk.nashorn.internal.runtime.Context;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.Streams;

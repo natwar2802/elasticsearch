@@ -773,6 +773,7 @@ public class TransportService extends AbstractLifecycleComponent {
         @Override
         public void onRequestReceived(long requestId, String action) {
             try {
+                //logger.error("Request received 777 line TransportService");
                 blockIncomingRequestsLatch.await();
             } catch (InterruptedException e) {
                 logger.trace("interrupted while waiting for incoming requests block to be removed");
@@ -834,6 +835,7 @@ public class TransportService extends AbstractLifecycleComponent {
 
         @Override
         public void onNodeConnected(final DiscoveryNode node) {
+            logger.error("Request received 838 line TransportService");
             // capture listeners before spawning the background callback so the following pattern won't trigger a call
             // connectToNode(); connection is completed successfully
             // addConnectionListener(); this listener shouldn't be called
@@ -843,6 +845,7 @@ public class TransportService extends AbstractLifecycleComponent {
 
         @Override
         public void onConnectionOpened(Transport.Connection connection) {
+            logger.error("Request received 847 line TransportService");
             // capture listeners before spawning the background callback so the following pattern won't trigger a call
             // connectToNode(); connection is completed successfully
             // addConnectionListener(); this listener shouldn't be called
@@ -866,6 +869,7 @@ public class TransportService extends AbstractLifecycleComponent {
         @Override
         public void onConnectionClosed(Transport.Connection connection) {
             try {
+                logger.error("Request received 872 line TransportService");
                 for (Map.Entry<Long, RequestHolder> entry : clientHandlers.entrySet()) {
                     RequestHolder holder = entry.getValue();
                     if (holder.connection().getCacheKey().equals(connection.getCacheKey())) {

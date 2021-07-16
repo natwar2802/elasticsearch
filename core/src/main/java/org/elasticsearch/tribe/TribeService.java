@@ -116,6 +116,7 @@ public class TribeService extends AbstractLifecycleComponent {
                 }
             }
             return sb.build();
+
         }
         Map<String, Settings> nodesSettings = settings.getGroups("tribe", true);
         if (nodesSettings.isEmpty()) {
