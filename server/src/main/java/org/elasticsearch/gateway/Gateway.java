@@ -56,9 +56,11 @@ public class Gateway {
         this.clusterService = clusterService;
         this.listGatewayMetaState = listGatewayMetaState;
         this.minimumMasterNodes = ElectMasterService.DISCOVERY_ZEN_MINIMUM_MASTER_NODES_SETTING.get(settings);
+        logger.error("line 59");
     }
 
     public void performStateRecovery(final GatewayStateRecoveredListener listener) throws GatewayException {
+        logger.error("line 63");
         String[] nodesIds = clusterService.state().nodes().getMasterNodes().keys().toArray(String.class);
         logger.trace("performing state recovery from {}", Arrays.toString(nodesIds));
         TransportNodesListGatewayMetaState.NodesGatewayMetaState nodesState = listGatewayMetaState.list(nodesIds, null).actionGet();
@@ -143,6 +145,7 @@ public class Gateway {
     }
 
     ClusterState.Builder upgradeAndArchiveUnknownOrInvalidSettings(MetaData.Builder metaDataBuilder) {
+        logger.error("line 148");
         final ClusterSettings clusterSettings = clusterService.getClusterSettings();
         metaDataBuilder.persistentSettings(
             clusterSettings.archiveUnknownOrInvalidSettings(
@@ -160,15 +163,18 @@ public class Gateway {
     }
 
     private void logUnknownSetting(String settingType, Map.Entry<String, String> e) {
+        logger.error("line 166");
         logger.warn("ignoring unknown {} setting: [{}] with value [{}]; archiving", settingType, e.getKey(), e.getValue());
     }
 
     private void logInvalidSetting(String settingType, Map.Entry<String, String> e, IllegalArgumentException ex) {
+        logger.error("line 171");
         logger.warn(() -> new ParameterizedMessage("ignoring invalid {} setting: [{}] with value [{}]; archiving",
                     settingType, e.getKey(), e.getValue()), ex);
     }
 
     public interface GatewayStateRecoveredListener {
+
         void onSuccess(ClusterState build);
 
         void onFailure(String s);

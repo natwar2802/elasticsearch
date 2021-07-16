@@ -121,6 +121,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
         @Override
         public void sendRequest(long requestId, String action, TransportRequest request, TransportRequestOptions options)
             throws TransportException {
+            //logger.error("line 124");
             sendLocalRequest(requestId, action, request, options);
         }
 
@@ -154,6 +155,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     public TransportService(Settings settings, Transport transport, ThreadPool threadPool, TransportInterceptor transportInterceptor,
                             Function<BoundTransportAddress, DiscoveryNode> localNodeFactory, @Nullable ClusterSettings clusterSettings,
                             Set<String> taskHeaders, ConnectionManager connectionManager) {
+        logger.error("line 158");
         // The only time we do not want to validate node connections is when this is a transport client using the simple node sampler
         this.validateConnections = TransportClient.CLIENT_TYPE.equals(settings.get(Client.CLIENT_TYPE_SETTING_S.getKey())) == false ||
             TransportClient.CLIENT_TRANSPORT_SNIFF.get(settings);
@@ -188,6 +190,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     public RemoteClusterService getRemoteClusterService() {
+        logger.error("line 193");
         return remoteClusterService;
     }
 
@@ -222,6 +225,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
     @Override
     protected void doStart() {
+        logger.error("line 228");
         transport.addMessageListener(this);
         connectionManager.addListener(this);
         transport.start();
@@ -240,6 +244,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
     @Override
     protected void doStop() {
+        logger.error("line 247");
         try {
             IOUtils.close(connectionManager, remoteClusterService, transport::stop);
         } catch (IOException e) {
@@ -290,10 +295,12 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      * this method is called
      */
     public final void acceptIncomingRequests() {
+        logger.error("line 298");
         blockIncomingRequestsLatch.countDown();
     }
 
     public TransportInfo info() {
+        logger.error("line 303");
         BoundTransportAddress boundTransportAddress = boundAddress();
         if (boundTransportAddress == null) {
             return null;
@@ -302,14 +309,17 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     public TransportStats stats() {
+        logger.error("line 312");
         return transport.getStats();
     }
 
     public BoundTransportAddress boundAddress() {
+        logger.error("line 317");
         return transport.boundAddress();
     }
 
     public List<String> getLocalAddresses() {
+        logger.error("line 322");
         return transport.getLocalAddresses();
     }
 
@@ -317,6 +327,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      * Returns <code>true</code> iff the given node is already connected.
      */
     public boolean nodeConnected(DiscoveryNode node) {
+        logger.error("line 330");
         return isLocalNode(node) || connectionManager.nodeConnected(node);
     }
 
@@ -326,6 +337,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      * @param node the node to connect to
      */
     public void connectToNode(DiscoveryNode node) throws ConnectTransportException {
+        //logger.error("line 340");
         connectToNode(node, null);
     }
 
@@ -336,6 +348,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      * @param connectionProfile the connection profile to use when connecting to this node
      */
     public void connectToNode(final DiscoveryNode node, ConnectionProfile connectionProfile) {
+        //logger.error("line 351");
         if (isLocalNode(node)) {
             return;
         }
@@ -344,6 +357,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
     public CheckedBiConsumer<Transport.Connection, ConnectionProfile, IOException> connectionValidator(DiscoveryNode node) {
         return (newConnection, actualProfile) -> {
+            logger.error("line 360");
             // We don't validate cluster names to allow for CCS connections.
             final DiscoveryNode remote = handshake(newConnection, actualProfile.getHandshakeTimeout().millis(), cn -> true).discoveryNode;
             if (validateConnections && node.equals(remote) == false) {
@@ -360,6 +374,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      * @param connectionProfile the connection profile to use
      */
     public Transport.Connection openConnection(final DiscoveryNode node, ConnectionProfile connectionProfile) throws IOException {
+        logger.error("line 377");
         if (isLocalNode(node)) {
             return localNodeConnection;
         } else {
@@ -382,6 +397,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     public DiscoveryNode handshake(
             final Transport.Connection connection,
             final long handshakeTimeout) throws ConnectTransportException {
+        logger.error("line 400");
         return handshake(connection, handshakeTimeout, clusterName::equals).discoveryNode;
     }
 
@@ -400,6 +416,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     public HandshakeResponse handshake(
         final Transport.Connection connection,
         final long handshakeTimeout, Predicate<ClusterName> clusterNamePredicate) {
+        logger.error("line 419");
         final HandshakeResponse response;
         final DiscoveryNode node = connection.getNode();
         try {
@@ -419,9 +436,10 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
         if (!clusterNamePredicate.test(response.clusterName)) {
             throw new IllegalStateException("handshake failed, mismatched cluster name [" + response.clusterName + "] - " + node);
-        } else if (response.version.isCompatible(localNode.getVersion()) == false) {
-            throw new IllegalStateException("handshake failed, incompatible version [" + response.version + "] - " + node);
         }
+//        else if (response.version.isCompatible(localNode.getVersion()) == false) {
+//            throw new IllegalStateException("handshake failed, incompatible version [" + response.version + "] - " + node);
+//        }
 
         return response;
     }
@@ -460,6 +478,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
         @Override
         public void writeTo(StreamOutput out) throws IOException {
             super.writeTo(out);
+            logger.error("line 481");
             out.writeOptionalWriteable(discoveryNode);
             clusterName.writeTo(out);
             Version.writeVersion(version, out);
@@ -475,6 +494,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     public void disconnectFromNode(DiscoveryNode node) {
+        logger.error("line 497");
         if (isLocalNode(node)) {
             return;
         }
@@ -482,21 +502,25 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     public void addConnectionListener(TransportConnectionListener listener) {
+        logger.error("line 505");
         connectionManager.addListener(listener);
     }
 
     public void removeConnectionListener(TransportConnectionListener listener) {
+        logger.error("line 510");
         connectionManager.removeListener(listener);
     }
 
     public <T extends TransportResponse> TransportFuture<T> submitRequest(DiscoveryNode node, String action, TransportRequest request,
                                                                           TransportResponseHandler<T> handler) throws TransportException {
+        logger.error("line 516");
         return submitRequest(node, action, request, TransportRequestOptions.EMPTY, handler);
     }
 
     public <T extends TransportResponse> TransportFuture<T> submitRequest(DiscoveryNode node, String action, TransportRequest request,
                                                                           TransportRequestOptions options,
                                                                           TransportResponseHandler<T> handler) throws TransportException {
+        logger.error("line 523");
         PlainTransportFuture<T> futureHandler = new PlainTransportFuture<>(handler);
         try {
             Transport.Connection connection = getConnection(node);
@@ -511,6 +535,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     public <T extends TransportResponse> void sendRequest(final DiscoveryNode node, final String action,
                                                                 final TransportRequest request,
                                                                 final TransportResponseHandler<T> handler) {
+        logger.error("line 538");
         final Transport.Connection connection;
         try {
             connection = getConnection(node);
@@ -526,6 +551,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
                                                                 final TransportRequest request,
                                                                 final TransportRequestOptions options,
                                                                 TransportResponseHandler<T> handler) {
+        //logger.error("line 554");
         final Transport.Connection connection;
         try {
             connection = getConnection(node);
@@ -551,6 +577,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
                                                                 final TransportRequest request,
                                                                 final TransportRequestOptions options,
                                                                 TransportResponseHandler<T> handler) {
+        //logger.error("line 580");
         try {
             asyncSender.sendRequest(connection, action, request, options, handler);
         } catch (final Exception ex) {
@@ -570,6 +597,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      * @throws NodeNotConnectedException if the given node is not connected
      */
     public Transport.Connection getConnection(DiscoveryNode node) {
+        //logger.error("line 600");
         if (isLocalNode(node)) {
             return localNodeConnection;
         } else {
@@ -581,6 +609,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
                                                                      final TransportRequest request, final Task parentTask,
                                                                      final TransportRequestOptions options,
                                                                      final TransportResponseHandler<T> handler) {
+        logger.error("line 612");
         final Transport.Connection connection;
         try {
             connection = getConnection(node);
@@ -595,6 +624,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     public <T extends TransportResponse> void sendChildRequest(final Transport.Connection connection, final String action,
                                                                final TransportRequest request, final Task parentTask,
                                                                final TransportResponseHandler<T> handler) {
+        logger.error("line 627");
         sendChildRequest(connection, action, request, parentTask, TransportRequestOptions.EMPTY, handler);
     }
 
@@ -602,6 +632,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
                                                                final TransportRequest request, final Task parentTask,
                                                                final TransportRequestOptions options,
                                                                final TransportResponseHandler<T> handler) {
+        logger.error("line 635");
         request.setParentTask(localNode.getId(), parentTask.getId());
         sendRequest(connection, action, request, options, handler);
     }
@@ -610,6 +641,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
                                                                    final TransportRequest request,
                                                                    final TransportRequestOptions options,
                                                                    TransportResponseHandler<T> handler) {
+        //logger.error("line 644");
         if (connection == null) {
             throw new IllegalStateException("can't send request to a null connection");
         }
@@ -684,6 +716,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     private void sendLocalRequest(long requestId, final String action, final TransportRequest request, TransportRequestOptions options) {
+        //logger.error("line 719");
         final DirectResponseChannel channel = new DirectResponseChannel(logger, localNode, action, requestId, this, threadPool);
         try {
             onRequestSent(localNode, requestId, action, request, options);
@@ -740,6 +773,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     private boolean shouldTraceAction(String action) {
+        logger.error("line 776");
         if (tracerLogInclude.length > 0) {
             if (Regex.simpleMatch(tracerLogInclude, action) == false) {
                 return false;
@@ -752,6 +786,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     public TransportAddress[] addressesFromString(String address, int perAddressLimit) throws UnknownHostException {
+        logger.error("line 789");
         return transport.addressesFromString(address, perAddressLimit);
     }
 
@@ -771,6 +806,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
         )));
 
     private void validateActionName(String actionName) {
+        logger.error("line 809");
         // TODO we should makes this a hard validation and throw an exception but we need a good way to add backwards layer
         // for it. Maybe start with a deprecation layer
         if (isValidActionName(actionName) == false) {
@@ -785,6 +821,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      * @see #VALID_ACTION_PREFIXES
      */
     public static boolean isValidActionName(String actionName) {
+        logger.error("line 824");
         for (String prefix : VALID_ACTION_PREFIXES) {
             if (actionName.startsWith(prefix)) {
                 return true;
@@ -803,6 +840,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      */
     public <Request extends TransportRequest> void registerRequestHandler(String action, Supplier<Request> requestFactory,
                                                     String executor, TransportRequestHandler<Request> handler) {
+        logger.error("line 843");
         validateActionName(action);
         handler = interceptor.interceptHandler(action, executor, false, handler);
         RequestHandlerRegistry<Request> reg = new RequestHandlerRegistry<>(
@@ -821,6 +859,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     public <Request extends TransportRequest> void registerRequestHandler(String action, String executor,
                                                                           Writeable.Reader<Request> requestReader,
                                                                           TransportRequestHandler<Request> handler) {
+        logger.error("line 862");
         validateActionName(action);
         handler = interceptor.interceptHandler(action, executor, false, handler);
         RequestHandlerRegistry<Request> reg = new RequestHandlerRegistry<>(
@@ -842,6 +881,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
                                                                           String executor, boolean forceExecution,
                                                                           boolean canTripCircuitBreaker,
                                                                           TransportRequestHandler<Request> handler) {
+        logger.error("line 884");
         validateActionName(action);
         handler = interceptor.interceptHandler(action, executor, forceExecution, handler);
         RequestHandlerRegistry<Request> reg = new RequestHandlerRegistry<>(
@@ -864,6 +904,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
                                                                           boolean canTripCircuitBreaker,
                                                                           Writeable.Reader<Request> requestReader,
                                                                           TransportRequestHandler<Request> handler) {
+        logger.error("line 907");
         validateActionName(action);
         handler = interceptor.interceptHandler(action, executor, forceExecution, handler);
         RequestHandlerRegistry<Request> reg = new RequestHandlerRegistry<>(
@@ -874,6 +915,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     /** called by the {@link Transport} implementation once a request has been sent */
     public void onRequestSent(DiscoveryNode node, long requestId, String action, TransportRequest request,
                               TransportRequestOptions options) {
+        //logger.error("line 918");
         if (traceEnabled() && shouldTraceAction(action)) {
             traceRequestSent(node, requestId, action, options);
         }
@@ -886,6 +928,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     /** called by the {@link Transport} implementation once a response was sent to calling node */
     @Override
     public void onResponseSent(long requestId, String action, TransportResponse response) {
+        //logger.error("line 931");
         if (traceEnabled() && shouldTraceAction(action)) {
             traceResponseSent(requestId, action);
         }
@@ -894,12 +937,14 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     /** called by the {@link Transport} implementation after an exception was sent as a response to an incoming request */
     @Override
     public void onResponseSent(long requestId, String action, Exception e) {
+        logger.error("line 940");
         if (traceEnabled() && shouldTraceAction(action)) {
             traceResponseSent(requestId, action, e);
         }
     }
 
     protected void traceResponseSent(long requestId, String action, Exception e) {
+        logger.error("line 947");
         tracerLog.trace(() -> new ParameterizedMessage("[{}][{}] sent error response", requestId, action), e);
     }
 
@@ -909,6 +954,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
      */
     @Override
     public void onRequestReceived(long requestId, String action) {
+        //logger.error("line 957");
         try {
             blockIncomingRequestsLatch.await();
         } catch (InterruptedException e) {
@@ -920,12 +966,14 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     public RequestHandlerRegistry<? extends TransportRequest> getRequestHandler(String action) {
+        //logger.error("line 969");
         return transport.getRequestHandler(action);
     }
 
 
     @Override
     public void onResponseReceived(long requestId, Transport.ResponseContext holder) {
+        //logger.error("line 976");
         if (holder == null) {
             checkForTimeout(requestId);
         } else if (traceEnabled() && shouldTraceAction(holder.action())) {
@@ -934,6 +982,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     private void checkForTimeout(long requestId) {
+        logger.error("line 985");
         // lets see if its in the timeout holder, but sync on mutex to make sure any ongoing timeout handling has finished
         final DiscoveryNode sourceNode;
         final String action;
@@ -965,6 +1014,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
     @Override
     public void onConnectionClosed(Transport.Connection connection) {
+        logger.error("line 1017");
         try {
             List<Transport.ResponseContext<? extends TransportResponse>> pruned =
                 responseHandlers.prune(h -> h.connection().getCacheKey().equals(connection.getCacheKey()));
@@ -1016,6 +1066,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
         @Override
         public void run() {
+            logger.error("line 1069");
             if (responseHandlers.contains(requestId)) {
                 long timeoutTime = threadPool.relativeTimeInMillis();
                 timeoutInfoHandlers.put(requestId, new TimeoutInfoHolder(node, action, sentTime, timeoutTime));
@@ -1039,6 +1090,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
          * to make sure this doesn't run.
          */
         public void cancel() {
+            //logger.error("line 1093");
             assert responseHandlers.contains(requestId) == false :
                 "cancel must be called after the requestId [" + requestId + "] has been removed from clientHandlers";
             if (cancellable != null) {
@@ -1098,17 +1150,20 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
         private volatile TimeoutHandler handler;
 
         public ContextRestoreResponseHandler(Supplier<ThreadContext.StoredContext> contextSupplier, TransportResponseHandler<T> delegate) {
+            //logger.error("line 1153");
             this.delegate = delegate;
             this.contextSupplier = contextSupplier;
         }
 
         @Override
         public T read(StreamInput in) throws IOException {
+            logger.error("line 1160");
             return delegate.read(in);
         }
 
         @Override
         public void handleResponse(T response) {
+            //logger.error("line 1166");
             if(handler != null) {
                 handler.cancel();
             }
@@ -1119,6 +1174,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
         @Override
         public void handleException(TransportException exp) {
+            logger.error("line 1177");
             if(handler != null) {
                 handler.cancel();
             }
@@ -1168,6 +1224,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
         @Override
         public void sendResponse(TransportResponse response) throws IOException {
+            //logger.error("line 1227");
             service.onResponseSent(requestId, action, response);
             final TransportResponseHandler handler = service.responseHandlers.onResponseReceived(requestId, service);
             // ignore if its null, the service logs it
@@ -1193,6 +1250,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
         @SuppressWarnings("unchecked")
         protected void processResponse(TransportResponseHandler handler, TransportResponse response) {
+            //logger.error("line 1253");
             try {
                 handler.handleResponse(response);
             } catch (Exception e) {
@@ -1202,6 +1260,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
 
         @Override
         public void sendResponse(Exception exception) throws IOException {
+            logger.error("line 1263");
             service.onResponseSent(requestId, action, exception);
             final TransportResponseHandler handler = service.responseHandlers.onResponseReceived(requestId, service);
             // ignore if its null, the service logs it
@@ -1227,6 +1286,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
         }
 
         protected RemoteTransportException wrapInRemote(Exception e) {
+            logger.error("line 1289");
             if (e instanceof RemoteTransportException) {
                 return (RemoteTransportException) e;
             }
@@ -1234,6 +1294,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
         }
 
         protected void processException(final TransportResponseHandler handler, final RemoteTransportException rtx) {
+            logger.error("line 1297");
             try {
                 handler.handleException(rtx);
             } catch (Exception e) {
@@ -1263,6 +1324,7 @@ public class TransportService extends AbstractLifecycleComponent implements Tran
     }
 
     private boolean isLocalNode(DiscoveryNode discoveryNode) {
+        //logger.error("line 1327");
         return Objects.requireNonNull(discoveryNode, "discovery node must not be null").equals(localNode);
     }
 }

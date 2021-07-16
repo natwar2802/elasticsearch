@@ -117,7 +117,7 @@ public class CancellableThreads {
         } catch (IOException e) {
             ioException = e;
         } finally {
-            remove();
+           remove();
         }
         // we are now out of threads collection so we can't be interrupted any more by this class
         // restore old flag and see if we need to fail

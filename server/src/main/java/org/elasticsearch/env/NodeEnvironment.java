@@ -161,7 +161,7 @@ public final class NodeEnvironment  implements Closeable {
     /**
      * Maximum number of data nodes that should run in an environment.
      */
-    public static final Setting<Integer> MAX_LOCAL_STORAGE_NODES_SETTING = Setting.intSetting("node.max_local_storage_nodes", 1, 1,
+    public static final Setting<Integer> MAX_LOCAL_STORAGE_NODES_SETTING = Setting.intSetting("node.max_local_storage_nodes", 2, 1,
         Property.NodeScope);
 
     /**

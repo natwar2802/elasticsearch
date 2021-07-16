@@ -97,6 +97,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
                           ThreadPool threadPool, GatewayMetaState metaState,
                           TransportNodesListGatewayMetaState listGatewayMetaState,
                           IndicesService indicesService) {
+        logger.error("line 100");
         this.gateway = new Gateway(settings, clusterService, listGatewayMetaState,
             indicesService);
         this.allocationService = allocationService;
@@ -129,6 +130,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
     @Override
     protected void doStart() {
+        logger.error("line 133");
         // use post applied so that the state will be visible to the background recovery thread we spawn in performStateRecovery
         clusterService.addListener(this);
     }
@@ -144,6 +146,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
     @Override
     public void clusterChanged(final ClusterChangedEvent event) {
+        logger.error("line 149");
         if (lifecycle.stoppedOrClosed()) {
             return;
         }
@@ -199,6 +202,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
     }
 
     private void performStateRecovery(boolean enforceRecoverAfterTime, String reason) {
+        logger.error("line 205");
         final Gateway.GatewayStateRecoveredListener recoveryListener = new GatewayRecoveryListener();
 
         if (enforceRecoverAfterTime && recoverAfterTime != null) {
@@ -235,10 +239,12 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
         @Override
         public void onSuccess(final ClusterState recoveredState) {
+            logger.error("line 242");
             logger.trace("successful state recovery, importing cluster state...");
             clusterService.submitStateUpdateTask("local-gateway-elected-state", new ClusterStateUpdateTask() {
                 @Override
                 public ClusterState execute(ClusterState currentState) {
+                    logger.error("line 247");
                     assert currentState.metaData().indices().isEmpty();
 
                     // remove the block, since we recovered from gateway
@@ -286,12 +292,14 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
                 @Override
                 public void onFailure(String source, Exception e) {
+                    logger.error("line 295");
                     logger.error(() -> new ParameterizedMessage("unexpected failure during [{}]", source), e);
                     GatewayRecoveryListener.this.onFailure("failed to updated cluster state");
                 }
 
                 @Override
                 public void clusterStateProcessed(String source, ClusterState oldState, ClusterState newState) {
+                    logger.error("line 302");
                     logger.info("recovered [{}] indices into cluster_state", newState.metaData().indices().size());
                 }
             });
@@ -299,6 +307,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
         @Override
         public void onFailure(String message) {
+            logger.error("line 310");
             recovered.set(false);
             scheduledRecovery.set(false);
             // don't remove the block here, we don't want to allow anything in such a case

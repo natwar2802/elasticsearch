@@ -144,6 +144,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     public TcpTransport(String transportName, Settings settings, Version version, ThreadPool threadPool,
                         PageCacheRecycler pageCacheRecycler, CircuitBreakerService circuitBreakerService,
                         NamedWriteableRegistry namedWriteableRegistry, NetworkService networkService) {
+        logger.error("line 147");
         this.settings = settings;
         this.profileSettings = getProfileSettings(settings);
         this.version = version;
@@ -181,24 +182,29 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     @Override
     protected void doStart() {
+        logger.error("line 185");
     }
 
     public void addMessageListener(TransportMessageListener listener) {
+        logger.error("line 189");
         messageListener.listeners.add(listener);
     }
 
     public boolean removeMessageListener(TransportMessageListener listener) {
+        logger.error("line 194");
         return messageListener.listeners.remove(listener);
     }
 
     @Override
     public CircuitBreaker getInFlightRequestBreaker() {
+        logger.error("line 200");
         // We always obtain a fresh breaker to reflect changes to the breaker configuration.
         return circuitBreakerService.getBreaker(CircuitBreaker.IN_FLIGHT_REQUESTS);
     }
 
     @Override
     public synchronized <Request extends TransportRequest> void registerRequestHandler(RequestHandlerRegistry<Request> reg) {
+        logger.error("line 207");
         if (requestHandlers.containsKey(reg.getAction())) {
             throw new IllegalArgumentException("transport handlers for action " + reg.getAction() + " is already registered");
         }
@@ -237,6 +243,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
         }
 
         public TcpChannel channel(TransportRequestOptions.Type type) {
+            logger.error("line 246");
             ConnectionProfile.ConnectionTypeHandle connectionTypeHandle = typeMapping.get(type);
             if (connectionTypeHandle == null) {
                 throw new IllegalArgumentException("no type channel for [" + type + "]");
@@ -246,6 +253,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
         @Override
         public void close() {
+            logger.error("line 256");
             if (isClosing.compareAndSet(false, true)) {
                 try {
                     boolean block = lifecycle.stopped() && Transports.isTransportThread(Thread.currentThread()) == false;
@@ -259,12 +267,14 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
         @Override
         public DiscoveryNode getNode() {
+            logger.error("line 270");
             return this.node;
         }
 
         @Override
         public void sendRequest(long requestId, String action, TransportRequest request, TransportRequestOptions options)
             throws IOException, TransportException {
+            logger.error("line 277");
             if (isClosing.get()) {
                 throw new NodeNotConnectedException(node, "connection already closed");
             }
@@ -281,6 +291,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     @Override
     public Releasable openConnection(DiscoveryNode node, ConnectionProfile profile, ActionListener<Transport.Connection> listener) {
+        logger.error("line 294");
         Objects.requireNonNull(profile, "connection profile cannot be null");
         if (node == null) {
             throw new ConnectTransportException(null, "can't open connection to a null node");
@@ -298,6 +309,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     private List<TcpChannel> initiateConnection(DiscoveryNode node, ConnectionProfile connectionProfile,
                                                 ActionListener<Transport.Connection> listener) {
+        logger.error("line 312");
         int numConnections = connectionProfile.getNumConnections();
         assert numConnections > 0 : "A connection profile must be configured with at least one connection";
 
@@ -342,6 +354,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     @Override
     public List<String> getLocalAddresses() {
+        logger.error("line 357");
         List<String> local = new ArrayList<>();
         local.add("127.0.0.1");
         // check if v6 is supported, if so, v4 will also work via mapped addresses.
@@ -352,6 +365,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     protected void bindServer(ProfileSettings profileSettings) {
+        logger.error("line 368");
         // Bind and start to accept incoming connections.
         InetAddress[] hostAddresses;
         List<String> profileBindHosts = profileSettings.bindHosts;
@@ -385,6 +399,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     private InetSocketAddress bindToPort(final String name, final InetAddress hostAddress, String port) {
+        logger.error("line 402");
         PortsRange portsRange = new PortsRange(port);
         final AtomicReference<Exception> lastException = new AtomicReference<>();
         final AtomicReference<InetSocketAddress> boundSocket = new AtomicReference<>();
@@ -419,6 +434,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     private BoundTransportAddress createBoundTransportAddress(ProfileSettings profileSettings,
                                                               List<InetSocketAddress> boundAddresses) {
+        logger.error("line 437");
         String[] boundAddressesHostStrings = new String[boundAddresses.size()];
         TransportAddress[] transportBoundAddresses = new TransportAddress[boundAddresses.size()];
         for (int i = 0; i < boundAddresses.size(); i++) {
@@ -450,6 +466,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     // package private for tests
     static int resolvePublishPort(ProfileSettings profileSettings, List<InetSocketAddress> boundAddresses,
                                   InetAddress publishInetAddress) {
+        logger.error("line 469");
         int publishPort = profileSettings.publishPort;
 
         // if port not explicitly provided, search for port of address in boundAddresses that matches publishInetAddress
@@ -486,6 +503,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     @Override
     public TransportAddress[] addressesFromString(String address, int perAddressLimit) throws UnknownHostException {
+        logger.error("line 506");
         return parse(address, settings.get("transport.profiles.default.port", TransportSettings.PORT.get(settings)), perAddressLimit);
     }
 
@@ -499,6 +517,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      * parse a hostname+port range spec into its equivalent addresses
      */
     static TransportAddress[] parse(String hostPortString, String defaultPortRange, int perAddressLimit) throws UnknownHostException {
+        logger.error("line 520");
         Objects.requireNonNull(hostPortString);
         String host;
         String portString = null;
@@ -551,6 +570,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     @Override
     protected final void doStop() {
+        logger.error("line 573");
         final CountDownLatch latch = new CountDownLatch(1);
         // make sure we run it on another thread than a possible IO handler thread
         assert threadPool.generic().isShutdown() == false : "Must stop transport before terminating underlying threadpool";
@@ -591,6 +611,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     public void onException(TcpChannel channel, Exception e) {
+        logger.error("line 614");
         if (!lifecycle.started()) {
             // just close and ignore - we are already stopped and just need to make sure we release all resources
             CloseableChannel.closeChannel(channel);
@@ -629,6 +650,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     protected void onServerException(TcpServerChannel channel, Exception e) {
+        logger.error("line 653");
         logger.error(new ParameterizedMessage("exception from server channel caught on transport layer [channel={}]", channel), e);
     }
 
@@ -643,6 +665,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     protected void serverAcceptedChannel(TcpChannel channel) {
+        logger.error("line 668");
         boolean addedOnThisCall = acceptedChannels.add(channel);
         assert addedOnThisCall : "Channel should only be added to accepted channel set once";
         // Mark the channel init time
@@ -682,6 +705,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     private void sendRequestToChannel(final DiscoveryNode node, final TcpChannel channel, final long requestId, final String action,
                                       final TransportRequest request, TransportRequestOptions options, Version channelVersion,
                                       boolean compressRequest, boolean isHandshake) throws IOException, TransportException {
+        logger.error("line 708");
         Version version = Version.min(this.version, channelVersion);
         OutboundMessage.Request message = new OutboundMessage.Request(threadPool.getThreadContext(), features, request, version, action,
             requestId, isHandshake, compressRequest);
@@ -707,6 +731,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
         final Exception error,
         final long requestId,
         final String action) throws IOException {
+        logger.error("line 734");
         Version version = Version.min(this.version, nodeVersion);
         TransportAddress address = new TransportAddress(channel.getLocalAddress());
         RemoteTransportException tx = new RemoteTransportException(nodeName, address, action, error);
@@ -729,6 +754,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
         final long requestId,
         final String action,
         final boolean compress) throws IOException {
+        logger.error("line 757");
         sendResponse(nodeVersion, features, channel, response, requestId, action, compress, false);
     }
 
@@ -741,6 +767,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
         final String action,
         boolean compress,
         boolean isHandshake) throws IOException {
+        logger.error("line 770");
         Version version = Version.min(this.version, nodeVersion);
         OutboundMessage.Response message = new OutboundMessage.Response(threadPool.getThreadContext(), features, response, version,
             requestId, isHandshake, compress);
@@ -755,6 +782,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      * @param message the message
      */
     public void inboundMessage(TcpChannel channel, BytesReference message) {
+        logger.error("line 785");
         try {
             channel.getChannelStats().markAccessed(threadPool.relativeTimeInMillis());
             transportLogger.logInboundMessage(channel, message);
@@ -782,6 +810,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      *                                               This is dependent on the available memory.
      */
     public int consumeNetworkReads(TcpChannel channel, BytesReference bytesReference) throws IOException {
+        logger.error("line 813");
         BytesReference message = decodeFrame(bytesReference);
 
         if (message == null) {
@@ -804,6 +833,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      *                                               This is dependent on the available memory.
      */
     static BytesReference decodeFrame(BytesReference networkBytes) throws IOException {
+        logger.error("line 836");
         int messageLength = readMessageLength(networkBytes);
         if (messageLength == -1) {
             return null;
@@ -831,6 +861,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      *                                               This is dependent on the available memory.
      */
     public static int readMessageLength(BytesReference networkBytes) throws IOException {
+        logger.error("line 864");
         if (networkBytes.length() < BYTES_NEEDED_FOR_MESSAGE_SIZE) {
             return -1;
         } else {
@@ -839,6 +870,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     private static int readHeaderBuffer(BytesReference headerBuffer) throws IOException {
+        logger.error("line 873");
         if (headerBuffer.get(0) != 'E' || headerBuffer.get(1) != 'S') {
             if (appearsToBeHTTP(headerBuffer)) {
                 throw new TcpTransport.HttpOnTransportException("This is not an HTTP port");
@@ -874,6 +906,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     private static boolean appearsToBeHTTP(BytesReference headerBuffer) {
+        logger.error("line 909");
         return bufferStartsWith(headerBuffer, "GET") ||
             bufferStartsWith(headerBuffer, "POST") ||
             bufferStartsWith(headerBuffer, "PUT") ||
@@ -886,6 +919,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     private static boolean bufferStartsWith(BytesReference buffer, String method) {
+        logger.error("line 922");
         char[] chars = method.toCharArray();
         for (int i = 0; i < chars.length; i++) {
             if (buffer.get(i) != chars[i]) {
@@ -919,6 +953,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      * This method handles the message receive part for both request and responses
      */
     public final void messageReceived(BytesReference reference, TcpChannel channel) throws IOException {
+        logger.error("line 956");
         readBytesMetric.inc(reference.length() + TcpHeader.MARKER_BYTES_SIZE + TcpHeader.MESSAGE_LENGTH_SIZE);
         InetSocketAddress remoteAddress = channel.getRemoteAddress();
 
@@ -965,6 +1000,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     private <T extends TransportResponse> void handleResponse(InetSocketAddress remoteAddress, final StreamInput stream,
                                                               final TransportResponseHandler<T> handler) {
+        logger.error("line 1003");
         final T response;
         try {
             response = handler.read(stream);
@@ -992,6 +1028,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      * Executed for a received response error
      */
     private void handlerResponseError(StreamInput stream, final TransportResponseHandler handler) {
+        logger.error("line 1031");
         Exception error;
         try {
             error = stream.readException();
@@ -1002,6 +1039,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     private void handleException(final TransportResponseHandler handler, Throwable error) {
+        logger.error("line 1042");
         if (!(error instanceof RemoteTransportException)) {
             error = new RemoteTransportException(error.getMessage(), error);
         }
@@ -1016,6 +1054,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     protected void handleRequest(TcpChannel channel, InboundMessage.RequestMessage message, int messageLengthBytes) throws IOException {
+        logger.error("line 1057");
         final Set<String> features = message.getFeatures();
         final String profileName = channel.getProfile();
         final String action = message.getActionName();
@@ -1062,6 +1101,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     // This template method is needed to inject custom error checking logic in tests.
     protected void validateRequest(StreamInput stream, long requestId, String action) throws IOException {
+        logger.error("line 1104");
         final int nextByte = stream.read();
         // calling read() is useful to make sure the message is fully read, even if there some kind of EOS marker
         if (nextByte != -1) {
@@ -1071,6 +1111,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
     }
 
     class RequestHandler extends AbstractRunnable {
+
         private final RequestHandlerRegistry reg;
         private final TransportRequest request;
         private final TransportChannel transportChannel;
@@ -1079,11 +1120,13 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
             this.reg = reg;
             this.request = request;
             this.transportChannel = transportChannel;
+            logger.error("line 1123");
         }
 
         @SuppressWarnings({"unchecked"})
         @Override
         protected void doRun() throws Exception {
+            logger.error("line 1128");
             reg.processMessageReceived(request, transportChannel);
         }
 
@@ -1094,6 +1137,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
         @Override
         public void onFailure(Exception e) {
+            logger.error("line 1140");
             if (lifecycleState() == Lifecycle.State.STARTED) {
                 // we can only send a response transport is started....
                 try {
@@ -1107,8 +1151,16 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
         }
     }
 
+
     public void executeHandshake(DiscoveryNode node, TcpChannel channel, ConnectionProfile profile, ActionListener<Version> listener) {
-        handshaker.sendHandshake(responseHandlers.newRequestId(), node, channel, profile.getHandshakeTimeout(), listener);
+        logger.error("line 1156");
+        try {
+            handshaker.sendHandshake(responseHandlers.newRequestId(), node, channel, profile.getHandshakeTimeout(), listener);
+        }catch(Exception e){
+            System.out.println(e);
+        }
+//        Map m = Thread.getAllStackTraces();
+//        System.out.println(m);
     }
 
     final TransportKeepAlive getKeepAlive() {
@@ -1129,6 +1181,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      * @throws IllegalStateException if the transport is not started / open
      */
     protected final void ensureOpen() {
+        logger.error("line 1184");
         if (lifecycle.started() == false) {
             throw new IllegalStateException("transport has been stopped");
         }
@@ -1136,6 +1189,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
     @Override
     public final TransportStats getStats() {
+        logger.error("line 1192");
         MeanMetric transmittedBytes = outboundHandler.getTransmittedBytes();
         return new TransportStats(acceptedChannels.size(), readBytesMetric.count(), readBytesMetric.sum(), transmittedBytes.count(),
             transmittedBytes.sum());
@@ -1145,6 +1199,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
      * Returns all profile settings for the given settings object
      */
     public static Set<ProfileSettings> getProfileSettings(Settings settings) {
+        logger.error("line 1202");
         HashSet<ProfileSettings> profiles = new HashSet<>();
         boolean isDefaultSet = false;
         for (String profile : settings.getGroups("transport.profiles.", true).keySet()) {
@@ -1176,6 +1231,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
         public final boolean isDefaultProfile;
 
         public ProfileSettings(Settings settings, String profileName) {
+            logger.error("line 1234");
             this.profileName = profileName;
             isDefaultProfile = TransportSettings.DEFAULT_PROFILE.equals(profileName);
             tcpKeepAlive = TransportSettings.TCP_KEEP_ALIVE_PROFILE.getConcreteSettingForNamespace(profileName).get(settings);
@@ -1202,6 +1258,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
         @Override
         public void onRequestReceived(long requestId, String action) {
+            logger.error("line 1261");
             for (TransportMessageListener listener : listeners) {
                 listener.onRequestReceived(requestId, action);
             }
@@ -1209,6 +1266,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
         @Override
         public void onResponseSent(long requestId, String action, TransportResponse response) {
+            logger.error("line 1269");
             for (TransportMessageListener listener : listeners) {
                 listener.onResponseSent(requestId, action, response);
             }
@@ -1216,6 +1274,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
         @Override
         public void onResponseSent(long requestId, String action, Exception error) {
+            logger.error("line 1277");
             for (TransportMessageListener listener : listeners) {
                 listener.onResponseSent(requestId, action, error);
             }
@@ -1224,6 +1283,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
         @Override
         public void onRequestSent(DiscoveryNode node, long requestId, String action, TransportRequest request,
                                   TransportRequestOptions finalOptions) {
+            logger.error("line 1286 TcpTransport");
             for (TransportMessageListener listener : listeners) {
                 listener.onRequestSent(node, requestId, action, request, finalOptions);
             }
@@ -1231,6 +1291,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
         @Override
         public void onResponseReceived(long requestId, ResponseContext holder) {
+            logger.error("line 1294 TcpTransport");
             for (TransportMessageListener listener : listeners) {
                 listener.onResponseReceived(requestId, holder);
             }
@@ -1262,10 +1323,12 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
             this.channels = channels;
             this.listener = listener;
             this.countDown = new CountDown(channels.size());
+            logger.error("line 1326");
         }
 
         @Override
         public void onResponse(Void v) {
+            logger.error("line 1331");
             // Returns true if all connections have completed successfully
             if (countDown.countDown()) {
                 final TcpChannel handshakeChannel = channels.get(0);
@@ -1273,6 +1336,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
                     executeHandshake(node, handshakeChannel, connectionProfile, new ActionListener<Version>() {
                         @Override
                         public void onResponse(Version version) {
+                            logger.error("line 1339");
                             NodeChannels nodeChannels = new NodeChannels(node, channels, connectionProfile, version);
                             long relativeMillisTime = threadPool.relativeTimeInMillis();
                             nodeChannels.channels.forEach(ch -> {
@@ -1286,6 +1350,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
                         @Override
                         public void onFailure(Exception e) {
+                            logger.error("line 1352");
                             CloseableChannel.closeChannels(channels, false);
 
                             if (e instanceof ConnectTransportException) {
@@ -1304,6 +1369,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
 
         @Override
         public void onFailure(Exception ex) {
+            logger.error("line 1372");
             if (countDown.fastForward()) {
                 CloseableChannel.closeChannels(channels, false);
                 listener.onFailure(new ConnectTransportException(node, "connect_exception", ex));
@@ -1311,6 +1377,7 @@ public abstract class TcpTransport extends AbstractLifecycleComponent implements
         }
 
         public void onTimeout() {
+            logger.error("line 1380");
             if (countDown.fastForward()) {
                 CloseableChannel.closeChannels(channels, false);
                 listener.onFailure(new ConnectTransportException(node, "connect_timeout[" + connectionProfile.getConnectTimeout() + "]"));

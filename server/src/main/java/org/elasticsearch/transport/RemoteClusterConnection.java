@@ -127,6 +127,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
                             String proxyAddress, ConnectionProfile connectionProfile) {
         this(settings, clusterAlias, seedNodes, transportService, maxNumRemoteConnections, nodePredicate, proxyAddress,
             createConnectionManager(connectionProfile, transportService));
+        logger.error("line 130 RemoteClusterConnection");
     }
 
     // Public for tests to pass a StubbableConnectionManager
@@ -150,6 +151,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         connectionManager.addListener(transportService);
         this.proxyAddress = proxyAddress;
         initialConnectionTimeout = RemoteClusterService.REMOTE_INITIAL_CONNECTION_TIMEOUT_SETTING.get(settings);
+        logger.error("line 145 RemoteClusterConnection");
     }
 
 
@@ -162,6 +164,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
             return new DiscoveryNode(node.getName(), node.getId(), node.getEphemeralId(), node.getHostName(), node
                 .getHostAddress(), new TransportAddress(proxyInetAddress), node.getAttributes(), node.getRoles(), node.getVersion());
         }
+
     }
 
     /**
@@ -174,6 +177,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         this.seedNodes = Collections.unmodifiableList(new ArrayList<>(seedNodes));
         this.proxyAddress = proxyAddress;
         connectHandler.connect(connectListener);
+        logger.error("line 180 RemoteClusterConnection");
     }
 
     /**
@@ -186,9 +190,11 @@ public final class RemoteClusterConnection implements TransportConnectionListene
     @Override
     public void onNodeDisconnected(DiscoveryNode node) {
         boolean remove = connectedNodes.remove(node);
+        logger.error("line 193 RemoteClusterConnection");
         if (remove && connectedNodes.size() < maxNumRemoteConnections) {
             // try to reconnect and fill up the slot of the disconnected node
             connectHandler.forceConnect();
+
         }
     }
 
@@ -197,6 +203,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
      */
     public void fetchSearchShards(ClusterSearchShardsRequest searchRequest,
                                   ActionListener<ClusterSearchShardsResponse> listener) {
+        logger.error("line 206 RemoteClusterConnection");
 
         final ActionListener<ClusterSearchShardsResponse> searchShardsListener;
         final Consumer<Exception> onConnectFailure;
@@ -217,6 +224,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
      * will invoke the listener immediately.
      */
     public void ensureConnected(ActionListener<Void> voidActionListener) {
+        logger.error("line 227 RemoteClusterConnection");
         if (connectedNodes.size() == 0) {
             connectHandler.connect(voidActionListener);
         } else {
@@ -226,6 +234,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
 
     private void fetchShardsInternal(ClusterSearchShardsRequest searchShardsRequest,
                                      final ActionListener<ClusterSearchShardsResponse> listener) {
+        logger.error("line 237 RemoteClusterConnection");
         final DiscoveryNode node = getAnyConnectedNode();
         Transport.Connection connection = connectionManager.getConnection(node);
         transportService.sendRequest(connection, ClusterSearchShardsAction.NAME, searchShardsRequest, TransportRequestOptions.EMPTY,
@@ -263,6 +272,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
      * cluster state.
      */
     void collectNodes(ActionListener<Function<String, DiscoveryNode>> listener) {
+        logger.error("line 275 RemoteClusterConnection");
         Runnable runnable = () -> {
             final ThreadContext threadContext = threadPool.getThreadContext();
             final ContextPreservingActionListener<Function<String, DiscoveryNode>> contextPreservingActionListener =
@@ -322,6 +332,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
      * If such node is not connected, the returned connection will be a proxy connection that redirects to it.
      */
     Transport.Connection getConnection(DiscoveryNode remoteClusterNode) {
+        logger.error("line 335 RemoteClusterConnection");
         if (connectionManager.nodeConnected(remoteClusterNode)) {
             return connectionManager.getConnection(remoteClusterNode);
         }
@@ -332,6 +343,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
 
 
     static final class ProxyConnection implements Transport.Connection {
+
         private final Transport.Connection proxyConnection;
         private final DiscoveryNode targetNode;
 
@@ -348,6 +360,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         @Override
         public void sendRequest(long requestId, String action, TransportRequest request, TransportRequestOptions options)
                 throws IOException, TransportException {
+            logger.error("line 363 RemoteClusterConnection");
             proxyConnection.sendRequest(requestId, TransportActionProxy.getProxyAction(action),
                     TransportActionProxy.wrapRequest(targetNode, request), options);
         }
@@ -422,6 +435,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
          */
         void maybeConnect() {
             connect(null);
+            logger.error("line 438 RemoteClusterConnection");
         }
 
         /**
@@ -429,7 +443,9 @@ public final class RemoteClusterConnection implements TransportConnectionListene
          * be queued or rejected and failed.
          */
         void connect(ActionListener<Void> connectListener) {
+            logger.error("line 446 RemoteClusterConnection");
             connect(connectListener, false);
+
         }
 
         /**
@@ -437,10 +453,12 @@ public final class RemoteClusterConnection implements TransportConnectionListene
          * trigger a connect round if there is no listener queued up.
          */
         void forceConnect() {
+            logger.error("line 456 RemoteClusterConnection");
             connect(null, true);
         }
 
         private void connect(ActionListener<Void> connectListener, boolean forceRun) {
+            logger.error("line 461 RemoteClusterConnection");
             final boolean runConnect;
             final Collection<ActionListener<Void>> toNotify;
             final ActionListener<Void> listener = connectListener == null ? null :
@@ -467,11 +485,13 @@ public final class RemoteClusterConnection implements TransportConnectionListene
                 }
             }
             if (runConnect) {
+                logger.error("line 488 RemoteClusterConnection");
                 forkConnect(toNotify);
             }
         }
 
         private void forkConnect(final Collection<ActionListener<Void>> toNotify) {
+            logger.error("line 494 RemoteClusterConnection");
             ExecutorService executor = threadPool.executor(ThreadPool.Names.MANAGEMENT);
             executor.submit(new AbstractRunnable() {
                 @Override
@@ -508,6 +528,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
                             maybeConnect();
                         }
                     });
+                    logger.error("line 531 RemoteClusterConnection");
                     collectRemoteNodes(seedNodes.stream().map(Tuple::v2).iterator(), transportService, connectionManager, listener);
                 }
             });
@@ -515,6 +536,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
 
         private void collectRemoteNodes(Iterator<Supplier<DiscoveryNode>> seedNodes, final TransportService transportService,
                                         final ConnectionManager manager, ActionListener<Void> listener) {
+            logger.error("line 539 RemoteClusterConnection");
             if (Thread.currentThread().isInterrupted()) {
                 listener.onFailure(new InterruptedException("remote connect thread got interrupted"));
             }
@@ -596,6 +618,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         @Override
         public void close() throws IOException {
             try {
+                logger.error("line 621 RemoteClusterConnection");
                 if (closed.compareAndSet(false, true)) {
                     cancellableThreads.cancel("connect handler is closed");
                     running.acquire(); // acquire the semaphore to ensure all connections are closed and all thread joined
@@ -632,11 +655,13 @@ public final class RemoteClusterConnection implements TransportConnectionListene
             public ClusterStateResponse read(StreamInput in) throws IOException {
                 ClusterStateResponse response = new ClusterStateResponse();
                 response.readFrom(in);
+                logger.error("line 658 RemoteClusterConnection");
                 return response;
             }
 
             @Override
             public void handleResponse(ClusterStateResponse response) {
+                logger.error("line 664 RemoteClusterConnection");
                 try {
                     if (remoteClusterName.get() == null) {
                         assert response.getClusterName().value() != null;
@@ -678,6 +703,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
 
             @Override
             public void handleException(TransportException exp) {
+                logger.error("line 706 RemoteClusterConnection");
                 logger.warn(() -> new ParameterizedMessage("fetching nodes from external cluster {} failed", clusterAlias), exp);
                 try {
                     IOUtils.closeWhileHandlingException(connection);
@@ -700,6 +726,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
     }
 
     boolean isNodeConnected(final DiscoveryNode node) {
+        logger.error("line 729 RemoteClusterConnection");
         return connectedNodes.contains(node);
     }
 
@@ -715,6 +742,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
      * Fetches connection info for this connection
      */
     public void getConnectionInfo(ActionListener<RemoteConnectionInfo> listener) {
+        logger.error("line 745 RemoteClusterConnection");
         final Optional<DiscoveryNode> anyNode = connectedNodes.getAnyConnectedNode();
         if (anyNode.isPresent() == false) {
             // not connected we return immediately
@@ -778,16 +806,19 @@ public final class RemoteClusterConnection implements TransportConnectionListene
     }
 
     RemoteConnectionInfo getLocalConnectionInfo() { // for tests
+        logger.error("line 809 RemoteClusterConnection");
         List<String> seedNodeAddresses = seedNodes.stream().map(Tuple::v1).collect(Collectors.toList());
         return new RemoteConnectionInfo(clusterAlias, seedNodeAddresses,
                 Collections.emptyList(), maxNumRemoteConnections, connectedNodes.size(), initialConnectionTimeout, skipUnavailable);
     }
 
     int getNumNodesConnected() {
+        logger.error("line 816 RemoteClusterConnection");
         return connectedNodes.size();
     }
 
     private static final class ConnectedNodes {
+
 
         private final Set<DiscoveryNode> nodeSet = new HashSet<>();
         private final String clusterAlias;
@@ -795,10 +826,12 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         private Iterator<DiscoveryNode> currentIterator = null;
 
         private ConnectedNodes(String clusterAlias) {
+            logger.error("line 829 RemoteClusterConnection");
             this.clusterAlias = clusterAlias;
         }
 
         public synchronized DiscoveryNode getAny() {
+            logger.error("line 834 RemoteClusterConnection");
             ensureIteratorAvailable();
             if (currentIterator.hasNext()) {
                 return currentIterator.next();
@@ -808,6 +841,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         }
 
         synchronized boolean remove(DiscoveryNode node) {
+            logger.error("line 844 RemoteClusterConnection");
             final boolean setRemoval = nodeSet.remove(node);
             if (setRemoval) {
                 currentIterator = null;
@@ -816,6 +850,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         }
 
         synchronized boolean add(DiscoveryNode node) {
+            logger.error("line 853 RemoteClusterConnection");
             final boolean added = nodeSet.add(node);
             if (added) {
                 currentIterator = null;
@@ -832,6 +867,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         }
 
         synchronized Optional<DiscoveryNode> getAnyConnectedNode() {
+            logger.error("line 870 RemoteClusterConnection");
             ensureIteratorAvailable();
             if (currentIterator.hasNext()) {
                 return Optional.of(currentIterator.next());
@@ -841,6 +877,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
         }
 
         private synchronized void ensureIteratorAvailable() {
+            logger.error("line 880 RemoteClusterConnection");
             if (currentIterator == null) {
                 currentIterator = nodeSet.iterator();
             } else if (currentIterator.hasNext() == false && nodeSet.isEmpty() == false) {
@@ -851,6 +888,7 @@ public final class RemoteClusterConnection implements TransportConnectionListene
     }
 
     private static ConnectionManager createConnectionManager(ConnectionProfile connectionProfile, TransportService transportService) {
+        logger.error("line 891 RemoteClusterConnection");
         return new ConnectionManager(connectionProfile, transportService.transport);
     }
 

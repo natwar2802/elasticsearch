@@ -60,20 +60,23 @@ public abstract class InboundMessage extends NetworkMessage implements Closeable
             this.namedWriteableRegistry = namedWriteableRegistry;
             this.threadContext = threadContext;
         }
-
+        int countReceivedMessage=0;
         InboundMessage deserialize(BytesReference reference) throws IOException {
+            countReceivedMessage=countReceivedMessage+1;
             int messageLengthBytes = reference.length();
             final int totalMessageSize = messageLengthBytes + TcpHeader.MARKER_BYTES_SIZE + TcpHeader.MESSAGE_LENGTH_SIZE;
             // we have additional bytes to read, outside of the header
             boolean hasMessageBytesToRead = (totalMessageSize - TcpHeader.HEADER_SIZE) > 0;
             StreamInput streamInput = reference.streamInput();
+            String k1=reference.utf8ToString();
+            System.out.println("message "+countReceivedMessage+" received by 6.8 is:"+k1);
             boolean success = false;
             try (ThreadContext.StoredContext existing = threadContext.stashContext()) {
                 long requestId = streamInput.readLong();
                 byte status = streamInput.readByte();
                 Version remoteVersion = Version.fromId(streamInput.readInt());
                 final boolean isHandshake = TransportStatus.isHandshake(status);
-                ensureVersionCompatibility(remoteVersion, version, isHandshake);
+                //ensureVersionCompatibility(remoteVersion, version, isHandshake);
                 if (TransportStatus.isCompress(status) && hasMessageBytesToRead && streamInput.available() > 0) {
                     Compressor compressor;
                     try {
@@ -92,6 +95,8 @@ public abstract class InboundMessage extends NetworkMessage implements Closeable
                     }
                     streamInput = compressor.streamInput(streamInput);
                 }
+//                String PrintMessage = streamInput.readString();
+//                System.out.println("messageAt6.8 "+countReceivedMessage+" Received "+PrintMessage);
                 streamInput = new NamedWriteableAwareStreamInput(streamInput, namedWriteableRegistry);
                 streamInput.setVersion(remoteVersion);
 
@@ -100,7 +105,7 @@ public abstract class InboundMessage extends NetworkMessage implements Closeable
                 InboundMessage message;
                 if (TransportStatus.isRequest(status)) {
                     final Set<String> features;
-                    if (remoteVersion.onOrAfter(Version.V_6_3_0)) {
+                    if (remoteVersion.onOrAfter(Version.V_5_4_1)) {
                         features = Collections.unmodifiableSet(new TreeSet<>(Arrays.asList(streamInput.readStringArray())));
                     } else {
                         features = Collections.emptySet();

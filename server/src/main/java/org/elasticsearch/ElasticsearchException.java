@@ -1034,7 +1034,7 @@ public class ElasticsearchException extends RuntimeException implements ToXConte
         SNAPSHOT_IN_PROGRESS_EXCEPTION(org.elasticsearch.snapshots.SnapshotInProgressException.class,
             org.elasticsearch.snapshots.SnapshotInProgressException::new, 151, Version.V_6_7_0),
         NO_SUCH_REMOTE_CLUSTER_EXCEPTION(org.elasticsearch.transport.NoSuchRemoteClusterException.class,
-            org.elasticsearch.transport.NoSuchRemoteClusterException::new, 152, Version.V_6_7_0),
+            org.elasticsearch.transport.NoSuchRemoteClusterException::new, 152, Version.V_5_4_1),
         RETENTION_LEASE_ALREADY_EXISTS_EXCEPTION(
                 org.elasticsearch.index.seqno.RetentionLeaseAlreadyExistsException.class,
                 org.elasticsearch.index.seqno.RetentionLeaseAlreadyExistsException::new,
