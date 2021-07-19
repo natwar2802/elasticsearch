@@ -16,8 +16,8 @@ h2. Next to do with Project
 
 h3. Project Requirements
 
-We need to have a jdk-8 installed or adoptopenjdk-1.8 installed using Homebrew. 
-set JAVA_HOME everytime we start a new terminal using @export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-1.8.jdk/Contents/Home@ 
+We need to have a jdk-8 installed or adoptopenjdk-8 installed using Homebrew. 
+set JAVA_HOME everytime we start a new terminal using @export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home@ 
 
 h3. Installation
 
@@ -34,6 +34,10 @@ h3. Another Cluster Setup in 5.4 Version
 change @http.port@ or @transport.tcp.port@ for setting up another cluster then just change it to 9201 and 9301 in elasticsearch.yml file at path @distribution/build/cluster/run node0/elasticsearch-5.4.4-SNAPSHOT/config/elasticsearch.yml@ just before attaching debugger to port
 
 If the 8000 port is preoccupied by another Cluster Debugger then just add @-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006@ line in the @distribution/build/cluster/run node0/elasticsearch-5.4.4-SNAPSHOT/config/jvm.options@ and attach debugger to port 5006
+
+h3. Warning
+
+whenever change is the code then a restart using @./gradlew run@ or @./gradlew --deubg-jvm@ is required to load the changes to the main memory,just Rerun using @./bin/elasticsearch@ would not work in loading new changes without using above.
 
 
 
