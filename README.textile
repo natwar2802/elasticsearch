@@ -68,6 +68,10 @@ h3. Steps to follow:-
 6. CCS will be enabled when got the indexed data using above query.
 7. After CCS 6.8->5 enabled then we can enable 5->6.8 using similar approach and similarly for 5<->7.
 
+h3. Warning
+
+whenever change is the code then a restart using @./gradlew run@ or @./gradlew --deubg-jvm@ is required to load the changes to the main memory,just Rerun using @./bin/elasticsearch@ would not work in loading new changes without using above.
+
 
 h1. Elasticsearch 6.8
 
