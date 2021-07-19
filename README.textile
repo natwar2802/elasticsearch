@@ -14,6 +14,27 @@ h2. Next to do with Project
 * After deep diving in code and understanding code flow we can go to query for cross cluster search.
 * If it fails then above approach similar to Connecting Cluster can be used to enable quering across clusters of es5 and es7.
 
+h3. Project Requirements
+
+We need to have a jdk-8 installed or adoptopenjdk-1.8 installed using Homebrew. 
+
+h3. Installation
+
+installation can be done by just cloning this repository ,switching to 5.4 branch by writing git checkout 5.4 in the terminal, after that we can run ./gradlew assemble for assembling distributions then we can import the project as a gradle project using intellij idea.
+The distribution for the project will be created under the @build/distributions@ directory in that project
+
+h3. Debugger Setup
+
+Run ElasticSearch using @./gradlew run --debug-jvm@ and click on @attach to process@ by clicking @run@ in task bar and attach to port 8000.
+
+h3. Another Cluster Setup in 5.4 Version
+
+change @http.port@ or @transport.tcp.port@ for setting up another cluster then just change it to 9201 and 9301 in elasticsearch.yml file at path @distribution/build/cluster/run node0/elasticsearch-5.4.4-SNAPSHOT/config/elasticsearch.yml@ just before attaching debugger to port
+
+If the 8000 port is preoccupied by another Cluster Debugger then just add @-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006@ line in the @distribution/build/cluster/run node0/elasticsearch-5.4.4-SNAPSHOT/config/jvm.options@ and attach debugger to port 5006
+
+
+
 h1. Elasticsearch 5.4
 
 h2. A Distributed RESTful Search Engine
