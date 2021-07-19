@@ -1,4 +1,20 @@
-h1. Elasticsearch
+h1. CCS Project Readme
+
+h2. Objective: Enable Cross Cluster Search between es5 and es7 as both versions contains ccs functionality by enabling send-receive request response/enabling handshake, connecting clusters and then enabling ccs
+
+h2. Progress made till Now
+
+* Intercepted messages, removed Version Compatibility Filters in both es5 and es6.8 , added loggers and got the External code flow and messages printed On both side
+* Send<->Receive  of Request and Responses has been enabled
+* Printed Code flow for each Request handled at es5 and each response handled at es6.8 end
+
+h2. Next to do with Project
+
+* The enabled handshake and understanding flow will help in connecting clusters .
+* After deep diving in code and understanding code flow we can go to query for cross cluster search.
+* If it fails then above approach similar to Connecting Cluster can be used to enable quering across clusters of es5 and es7.
+
+h1. Elasticsearch 5.4
 
 h2. A Distributed RESTful Search Engine
 
