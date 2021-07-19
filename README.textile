@@ -14,6 +14,61 @@ h2. Next to do with Project
 * After deep diving in code and understanding code flow we can go to query for cross cluster search.
 * If it fails then above approach similar to Connecting Cluster can be used to enable quering across clusters of es5 and es7.
 
+h3. Project Requirements
+
+We need to have a jdk-11 installed or adoptopenjdk-11 installed using Homebrew.
+set JAVA_HOME using everytime we start a new terminal using @export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home@ 
+
+
+h3. Installation
+
+installation can be done by just cloning this repository ,switching to 6.8 branch by writing @git checkout 6.8@ in the terminal, after that we can run 
+@./gradlew assemble@ for assembling distributions then we can import the project as a gradle project using intellij idea.
+The distribution for the project will be created under the @build/distributions@ directory in that project
+
+h3. Debugger Setup
+
+Run ElasticSearch using @./gradlew run --debug-jvm@ and click on @attach to process@ by clicking @run@ in task bar and attach to port 8000.
+
+h3. Another Cluster Setup in 6.8 Version
+
+change @http.port@ or @transport.tcp.port@ for setting up another cluster then just change it to 9202 and 9302 in elasticsearch.yml file at path @distribution/build/cluster/run node0/elasticsearch-6.8.17-SNAPSHOT/config/elasticsearch.yml@ just before attaching debugger to port
+
+If the 8000 port is preoccupied by another Cluster Debugger then just add @-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007@ line in the @distribution/build/cluster/run node0/elasticsearch-6.8.17-SNAPSHOT/config/jvm.options@ and attach debugger to port 5007
+
+h3. Steps to follow:-
+
+1. Add Remote Cluster Settings using the query:
+<pre>@curl -X PUT "localhost:9202/_cluster/settings?pretty" -H 'Content-Type: application/json' -d'
+  {
+  "persistent": {
+    "search": {
+      "remote": {
+        "remote_cluster_name": {
+          "seeds": [
+              "127.0.0.1:9301(remote cluster tcp port)"
+          ]
+        }
+      }
+    }
+  }
+}
+  '@</pre>
+2. Observing the request messages sent to 5.4 and response messages received at 6.8 and understanding the code flow using printed code flow.
+3. checking whether remote cluster has been connected using @curl -X GET "localhost:9202/_remote/info"@
+4. while getting false following the code flow and detecting points of failure i.e. where desired variable values are not obtained when following using debuger and changing the code to repair those points of failure.
+5. If connected the Remote Cluster, index some data in remote cluster and make a query from 6.8 using:
+<pre>@curl -X GET "localhost:9202/remote_cluster_name:remote_index_name/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "match_all": { }
+  }
+}
+'@</pre>
+6. CCS will be enabled when got the indexed data using above query.
+7. After CCS 6.8->5 enabled then we can enable 5->6.8 using similar approach and similarly for 5<->7.
+
+
 h1. Elasticsearch 6.8
 
 h2. A Distributed RESTful Search Engine
