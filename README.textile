@@ -17,10 +17,12 @@ h2. Next to do with Project
 h3. Project Requirements
 
 We need to have a jdk-8 installed or adoptopenjdk-1.8 installed using Homebrew. 
+set JAVA_HOME everytime we start a new terminal using @export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-1.8.jdk/Contents/Home@ 
 
 h3. Installation
 
-installation can be done by just cloning this repository ,switching to 5.4 branch by writing git checkout 5.4 in the terminal, after that we can run ./gradlew assemble for assembling distributions then we can import the project as a gradle project using intellij idea.
+installation can be done by just cloning this repository ,switching to 5.4 branch by writing @git checkout 5.4@ in the terminal, after that we can run 
+@./gradlew assemble@ for assembling distributions then we can import the project as a gradle project using intellij idea.
 The distribution for the project will be created under the @build/distributions@ directory in that project
 
 h3. Debugger Setup
